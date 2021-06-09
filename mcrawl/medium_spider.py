@@ -1,33 +1,42 @@
+import os
+import sys
+import django
 import scrapy
 from scrapy.crawler import CrawlerProcess
 import sqlite3
 from datetime import date
 from datetime import timedelta
+# from medcrawl import setup
+# setup()
+sys.path.append('../medcrawl/')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'medcrawl.settings'
+django.setup()
+from mcrawl.models import paged,pgparam
 con = sqlite3.connect('crawlt.db')
 cur = con.cursor()
 cur.execute('''DROP TABLE IF EXISTS pagedata''')
 con.commit()
 # Create table
-cur.execute('''CREATE TABLE pagedata (No int, title text, readTime text, Day text, fullDate text,link text,fullpage text,tags text)''')
+cur.execute('''CREATE TABLE pagedata (No int, title text,author text, readTime text, Day text, fullDate text,link text,fullpage text,tags text)''')
 con.commit()
 con.close()
-# Insert a row of data
-#cur.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
 
+paged.objects.all().delete()
 
 class PostsSpider(scrapy.Spider):
     name = "posts"
     tag1 = "gaming"
     tag2 = "books"
-    today = date.today()
+    
     count = 0
+    today = date.today()
     yesterday = today - timedelta(days = 1)
     d1 = yesterday.strftime("%Y/%m/%d")
     start_urls = [
         # "https://medium.com/tag/"+tag1+"/archive/"+str(d1),
         # "https://medium.com/tag/"+tag2+"/archive/"+str(d1)
         ]
-
+    print("IN MEDIUM SPIDER")
     def parse(self,response):
         con = sqlite3.connect('crawlt.db')
         self.count = 1
@@ -35,22 +44,42 @@ class PostsSpider(scrapy.Spider):
 
         page = response.url.split('/')[-1]
         filename = 'posts-%s.html' % page
-        for i in range(1,30):
-            title = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[2]/a/div/section/div[2]/div/h3/text()').get())
+
+        related = (response.xpath('//div/div/ul/li/a/text()').getall())
+        print("RELATED TAGS:"+str(related))
+        a = pgparam.objects.latest('id')
+        a.relatedtags = related
+        a.save()
+        pagenum = pgparam.objects.latest('id').num
+        end = pagenum*10
+        start = end-5
+        print("START:"+str(start)+" END:"+str(end))
+        for i in range(start,end):
+            print("INSIDE FOR LOOP")
+            title =    (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[2]/a/div/section/div[2]/div/h3/text()').get())
+            if title is None:
+                print("null Title")
+                end = end+1
+                continue
+            authorr = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/a[1]/text()').get())
             readtime = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/span[2]/@title').get())
-            time = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/a/time/text()').get())
+            time =     (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/a/time/text()').get())
             fulltime = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/a/time/@datetime').get())
-            link = (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[2]/a/@href').get())
-            cur.execute("insert into pagedata(No,title,readTime,Day,fullDate,link) values (?, ?, ?, ?, ?, ?)", (i, title,readtime,time,fulltime,link))
+            link =     (response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[2]/a/@href').get())
+            
+            substr = "?"
+            link = link[:link.index(substr)]            
+            cur.execute("insert into pagedata(No,title,author,readTime,Day,fullDate,link) values (?, ?, ?, ?, ?, ?, ?)", (i, title,authorr,readtime,time,fulltime,link))
+            b = paged(pgno = i, bgtitle = title,bgauthor=authorr, bgread = readtime, bgdt = time, bgfdt = fulltime, bglink = link)
+            b.save()
+            
             self.start_urls.append(link)
             print(self.start_urls)
 
-            scrapy.Request(link,callback = self.parse2)
-            # rsp = scrapy.Response(req.url)
-            # rsp
-            
+            # scrapy.Request(link,callback = self.parse2)
             print('Post number:'+str(i))
             print(response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[2]/a/div/section/div[2]/div/h3/text()').get())
+            print(response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/a[1]/text()').get())
             print(response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/span[2]/@title').get())
             print(response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/a/time/text()').get())
             print(response.xpath('/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div['+str(i)+']/div/div/div[1]/div/div/div[2]/div/a/time/@datetime').get())
@@ -58,49 +87,17 @@ class PostsSpider(scrapy.Spider):
 
         
         print(self.count)
-        # if(self.count (response.text,str1,response.url))
-    # Save (commit) the changes
+        # print(paged.objects.all)
         con.commit()
         con.close()
-
-    def parse2(self,response):
-        print("in parse2")
-        tags = response.xpath('//div/ul/li/a/text()').getall()
-        str1 = "" 
-        cur.execute("SELECT link FROM pagedata")
-        rows = cur.fetchall()
-             # traverse in the string  
-             
-        for ele in tags: 
-            str1 += ele  
-        query = "Update pagedata set fullpage = ? , tags = ? where link = ?"
-        for row in rows:
-            cur.execute(query,(response.text,str1,response.url))
             
 
 process = CrawlerProcess()
-tag1 = "books"
-
-process.crawl(PostsSpider, start_urls=["https://medium.com/tag/"+tag1+"/archive/2021/02/02"])
-# process.crawl(PostsSpider)
-
+tag1 = pgparam.objects.latest('id').tag
+#Model.objects.latest('field')
+print("TAG IN MS:"+tag1)
+today = date.today()
+yesterday = today - timedelta(days = 1)
+d1 = yesterday.strftime("%Y/%m/%d")
+process.crawl(PostsSpider, start_urls=["https://medium.com/tag/"+tag1+"/archive/"+str(d1)])
 process.start()
-
-#with open(filename,'wb') as f:
-            
-            
-            #f.write('|||||||||||||')
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[2]/div/div/div[2]/a/div/section/div[2]/div/h3
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[2]/a/@href -- ARTICLE LINK
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[2]/div/div/div[2]/a/div/section/div[2]/div/h3
-                  #//*[@id="prerendered"]/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[2]/a/div/section/div[2]/div/h3/text() - article title
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[2]/a/div/section/div[2]/div/h3/text() - article title
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[2]/div/div/div[2]/a/div/section/div[2]/div/h3/strong/text() - title before 2021
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div/div/div[2]/div/span[2]/@title - time
-            #path--------------------------------------------        -which article------
-            #//*[@id="prerendered"]/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div/div/div[2]/div/a
-            #//*[@id="prerendered"]/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div/div/div[2]/div/a/time/text - May 31
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[2]/div[2]/div[2]/div/div/div[1]/div/div/div[2]/div/a/time/text
-            #//*[@id="prerendered"]/div[3]/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div/div/div[2]/div/a/time/@datetime - full date time
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[1]/div/ul/li[1]/a
-            #/html/body/div[1]/div[2]/div/div[3]/div/div/div[1]/div/ul/li[2]/a
