@@ -5,6 +5,6 @@ from . import views
 
 urlpatterns = [
     path("", views.index ,name='mcrawl'),
-    path('tagger/', views.tagger,name = 'ntag'),
+    path('tagger/', views.tagger,name = 'ntag')
 ]
 

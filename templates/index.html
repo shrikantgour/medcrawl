@@ -71,6 +71,7 @@
     <td>{{sts.bgread}}</td>
     <td>{{sts.bgdt}}</td>
     
+    {% comment %} <td>{{sts.bgfdt}}</td> {% endcomment %}
     <td><a href = "{{sts.bglink}}">{{sts.bglink}}</a></td>
     <td>
     {% if sts.bgtag1 %}
@@ -98,14 +99,16 @@
 <div class="d-grid gap-2 col-12 mx-auto text-right">
 <form method = "POST">
 {% csrf_token %}
-  <button class="btn btn-primary mx-auto" type="submit" name ="next10" {% if not enable %}disabled{%endif%}>Scrape Next 10 Articles</button>
+  <button class="btn btn-primary mx-auto" type="submit" name ="next10" id= "next10"{% if not enable %}disabled{%endif%}>Scrape Next 10 Articles</button>
+  {% comment %} <button class="btn btn-primary" type="button">Button</button> {% endcomment %}
 </form>
-{% if pgs %}
-<div class="form-group">
-        <span class="help-block">Avg. Time to Scrape: {{pgs.scrapetime}}</span>
-      </div>
-{% endif %}
 </div>
+ {% endif %}
+
+ {% if  pgs%}
+ <div class="form-group">
+      <span class="help-block">Avd Time to Scrape: {{pgs.scrapetime}}</span>
+  </div>
  {% endif %}
  </body>
 </html>
