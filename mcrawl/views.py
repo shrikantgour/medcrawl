@@ -64,12 +64,14 @@ def index(request):
                 i= i+1
             os.system('python ../medcrawl/mcrawl/page_spider.py')
             a = pgparam.objects.latest('id').relatedtags
-            al = a.split(',')
-            # al[0] = al[0][1:]
-            for i in range(0,len(al)):
-                al[i] = al[i][2:-1]
-                print(al[i])
-            al[len(al)-1] = al[len(al)-1][:-1]
+            al = None
+            if a :
+                al = a.split(',')
+                # al[0] = al[0][1:]
+                for i in range(0,len(al)):
+                    al[i] = al[i][2:-1]
+                    print(al[i])
+                al[len(al)-1] = al[len(al)-1][:-1]
             pgs = pgparam.objects.latest('id')
             st=paged.objects.all() # Collect all records from table
             if(st):
@@ -131,12 +133,14 @@ def index(request):
                 i= i+1
             os.system('python ../medcrawl/mcrawl/page_spider.py')
             a = pgparam.objects.latest('id').relatedtags
-            al = a.split(',')
-            # al[0] = al[0][1:]
-            for i in range(0,len(al)):
-                al[i] = al[i][2:-1]
-                print(al[i])
-            al[len(al)-1] = al[len(al)-1][:-1]
+            al = None
+            if a :
+                al = a.split(',')
+                # al[0] = al[0][1:]
+                for i in range(0,len(al)):
+                    al[i] = al[i][2:-1]
+                    print(al[i])
+                al[len(al)-1] = al[len(al)-1][:-1]
             pgs = pgparam.objects.latest('id')
             st=paged.objects.all() # Collect all records from table
             if(st):
@@ -206,12 +210,14 @@ def tagger(request):
                 i= i+1
             os.system('python ../medcrawl/mcrawl/page_spider.py')
             a = pgparam.objects.latest('id').relatedtags
-            al = a.split(',')
-            # al[0] = al[0][1:]
-            for i in range(0,len(al)):
-                al[i] = al[i][2:-1]
-                print(al[i])
-            al[len(al)-1] = al[len(al)-1][:-1]
+            al = None
+            if a :
+                al = a.split(',')
+                # al[0] = al[0][1:]
+                for i in range(0,len(al)):
+                    al[i] = al[i][2:-1]
+                    print(al[i])
+                al[len(al)-1] = al[len(al)-1][:-1]
             pgs = pgparam.objects.latest('id')
             st=paged.objects.all() # Collect all records from table
             if(st):

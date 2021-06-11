@@ -70,20 +70,29 @@ class PostsSpider(scrapy.Spider):
                     end = end+1
                     nullcount= nullcount+1
                     continue
+                print("after null title")
                 remaining = end-i
                 pg.remainingarticles = remaining
-                pg.subfromtoday = pg.subfromtoday+1
+                pg.subfromtoday = pg.subfromtoday + 1
+                
                 numm = 1
                 endat = numm*10 +1
                 startfrom = endat-10
                 pg.num = numm
                 pg.startnum = startfrom
                 pg.endnum = endat
+                pg.errcode = 96
                 pg.save()
                 print("REMAINING ARTICLES: "+str(pg.remainingarticles)+" SUB FROM TODAY: "+str(pg.subfromtoday))
                 break
             nullcount=0
             alreadyexist = paged.objects.filter(bgtitle = title)
+            if not alreadyexist:
+                if paged.objects.all():
+                    print(str(paged.objects.latest('id').bgtitle))
+                    if title == str(paged.objects.latest('id').bgtitle):
+                        print("FOUND BG Title"+ title)
+                        alreadyexist = 1
             print("PRINTING ALRDYEXST:"+str(alreadyexist))
             if alreadyexist:
                 print("DUPLICATE Title"+ title)
