@@ -1,3 +1,7 @@
 # medcrawl
-To run the project- open a terminal in this directory (preferrable through an IDE like vscode) and run the following-
-python .\mcrawl\spidertest.py
+To run the project- 
+1.copy the project on your local device
+2. open a terminal (python shell/powershell) in mcrawl directory and run
+    python manage.py runserver
+3.Open the url shoen in terminal in a web browser (default - http://127.0.0.1:8000/)
+enter and tag and search.
