@@ -18,14 +18,14 @@
 </nav>
 <tr>
 <div><br></div>
-<form class="row g-3">
+<form class="row g-3" method = "POST">
 {% csrf_token %}
 <div class="col-auto">
     <label class="mx-auto form-label"><h4>Tag:</h4></label>
   </div>
   <div class="col-auto">
     <label for="inputtag" class="visually-hidden" >Tag</label>
-    <input type="text" class="form-control" id="inputtag" placeholder="Gaming/Technology">
+    <input type="text" class="form-control" id="inputtagname" name = "inputtagname" placeholder="Gaming/Technology">
   </div>
   <div class="col-auto">
     <button type="submit" class="btn btn-primary mb-3">Scrape</button>
@@ -33,25 +33,33 @@
 </form>
 <br>
 <div class="btn-group">
+{% if msg %}
+<label class="mx-auto form-label"><h4>{{msg}}</h4></label>
+{% elif al%} 
 <label class="mx-auto form-label"><h4>Related Tags:</h4></label>
-  {% for ali in al%}
-    {% comment %} <a class="btn-link" href="/#">{{ali[1:-1]}}</a>  {% endcomment %}
-    <button type="button" class="m-1 btn btn-primary rounded">{{ali}}</button>
-  {% endfor %}
-  {% comment %} <a href="#" class="btn btn-primary">Link</a> {% endcomment %}
-  {% comment %} <a class="btn-link" href="/#">{{a[0]}}</a> {% endcomment %}
+{% endif %}
 </div>
+<div>
+{% for ali in al%}
+  <a class="m-1 btn btn-primary rounded" href="/tagger/?sts.bgtag={{ali}}" role="button">{{ali}}</a>
+{% endfor %}
+</div>
+{% if noarts %}
+<label class="mx-auto form-label"><h4>{{noarts}}</h4></label>
+{% endif %}
+{% if st %}
 <table class="table table-light table-striped table-hover">
   <thead>
     <tr>
       <th scope="col">#</th>
       <th scope="col">Author</th>
       <th scope="col">Title</th>
-      <th scope="col">Read Time</th>
+      <th scope="col">Time</th>
       <th scope="col">Date</th>
-      <th scope="col">Date & Time</th>
+      {% comment %} <th scope="col">Date & Time</th> {% endcomment %}
       <th scope="col">URL</th>
       <th scope="col">Tags</th>
+      <th scope="col">View</th>
     </tr>
   </thead>
   <tbody>
@@ -62,32 +70,42 @@
     <td>{{sts.bgtitle}}</td>
     <td>{{sts.bgread}}</td>
     <td>{{sts.bgdt}}</td>
-    <td>{{sts.bgfdt}}</td>
+    
     <td><a href = "{{sts.bglink}}">{{sts.bglink}}</a></td>
     <td>
-    <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag1}}">{{sts.bgtag1}}</a>,
-    <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag2}}">{{sts.bgtag2}}</a>,
-    <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag3}}">{{sts.bgtag3}}</a>,
-    <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag4}}">{{sts.bgtag4}}</a>,
-    <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag5}}">{{sts.bgtag5}}</a>
-    {% comment %} <form>
-    <button type="button" class="btn btn-link">{{sts.bgtag1}}</button>
-    <button type="button" class="btn btn-link">{{sts.bgtag2}}</button>
-    <button type="button" class="btn btn-link">{{sts.bgtag3}}</button>
-    <button type="button" class="btn btn-link">{{sts.bgtag4}}</button>
-    <button type="button" class="btn btn-link">{{sts.bgtag5}}</button>
-    </form> {% endcomment %}
+    {% if sts.bgtag1 %}
+      <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag1}}">{{sts.bgtag1}}</a>
+    {% endif %}
+    {% if sts.bgtag2 %}
+      <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag2}}">{{sts.bgtag2}}</a>
+    {% endif %}
+    {% if sts.bgtag3 %}
+      <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag3}}">{{sts.bgtag3}}</a>
+    {% endif %}
+    {% if sts.bgtag4 %}
+      <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag4}}">{{sts.bgtag4}}</a>
+    {% endif %}
+    {% if sts.bgtag5 %}
+      <a class="btn-link" href="/tagger/?sts.bgtag={{sts.bgtag5}}">{{sts.bgtag5}}</a>
+    {% endif %}
     </td>
+    <td><a class="btn btn-primary" href="{{sts.bgpage}}" role="button" target = "_blank">View</a></td>
  </tr>
-{% comment %} {{sts.pgno}} {{sts.bgauthor}} {{sts.bgtitle}} {{sts.bgread}}. {{sts.bgdt}} {{sts.bgfdt}}. {{sts.bglink}}. {{sts.bgtags}}<br> {% endcomment %}
-
 {% endfor %}
-      
   </tbody>
 </table>
-<div class="d-grid gap-2 col-6 mx-auto">
-  <button class="btn btn-primary" type="button">Scrape Next 10 Articles</button>
-  {% comment %} <button class="btn btn-primary" type="button">Button</button> {% endcomment %}
+
+<div class="d-grid gap-2 col-12 mx-auto text-right">
+<form method = "POST">
+{% csrf_token %}
+  <button class="btn btn-primary mx-auto" type="submit" name ="next10" {% if not enable %}disabled{%endif%}>Scrape Next 10 Articles</button>
+</form>
+{% if pgs %}
+<div class="form-group">
+        <span class="help-block">Avg. Time to Scrape: {{pgs.scrapetime}}</span>
+      </div>
+{% endif %}
 </div>
+ {% endif %}
  </body>
 </html>

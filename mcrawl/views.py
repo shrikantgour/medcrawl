@@ -1,56 +1,200 @@
+from .forms import MyForm, NameForm, NameForm2
 from django.shortcuts import render,HttpResponse,HttpResponseRedirect
 from .models import paged,pgparam
 import os
-# Create your views here.
-# def index(request):
-#     context = {
-#         "variable" : "shrikant var"
-#     }
-#     return render(request,'index.html',context)
+from spellchecker import SpellChecker
 
 def index(request):
-    tagg = 'gaming'
-    numm = 1
-    a = pgparam(tag = tagg, num = numm)
-    a.save()
-    os.system('python ../medcrawl/mcrawl/medium_spider.py')
-    os.system('python ../medcrawl/mcrawl/page_spider.py')
-    a = pgparam.objects.latest('id').relatedtags
-    al = a.split(',')
-    for i in range(0,9):
-        al[i] = al[i][2:-1]
-        print(al[i])
-    al[8] = al[8][:-1]
-    st=paged.objects.all() # Collect all records from table
-    return render(request,'index.html',{'st':st, 'al':al})
-    # if request.method == 'POST' and 'run_script' in request.POST:
-        
-        # return HttpResponseRedirect(reverse(mcrawl:index)
-    # return user to required page
-    
-    # os.system('python ../medcrawl/mcrawl/medium_spider.py')
-    # os.system('python ../medcrawl/mcrawl/page_spider.py')
+    if request.method == 'POST':
+        form = MyForm(request.POST)
+        nameof = request.POST.get('next10')
+        if nameof:
+            print("IN NEXT 10 form if")
+            x = pgparam.objects.latest('id')
+            tagg = x.tag
+            numm = x.num
+            numm = numm+1
+            endat = numm*10 +1
+            startfrom = endat-10
+            tempval = pgparam.objects.latest('id').tag
+            if tempval:
+                print("PREVIOUS TAG FOUND!:"+tempval)
+            else:
+                tempval = ""
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
+            a.save()
+            i = 1  
+            while True:  
+                print("IN DO WHILE LOOP GOING "+str(i))
+                os.system('python ../medcrawl/mcrawl/medium_spider.py')
+                print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
+                if(str(pgparam.objects.latest('id').errcode) == str(945)):
+                    spell = SpellChecker()
+                    words = spell.candidates(tagg)
+                    print(str(words))
+                    if not words:
+                        words = "something else"
+                    msg = "Could Not Find Any Articles. Try "+str(words)
+                    return render(request,'index.html',{'msg':msg})
+                    break
+                checkrem = pgparam.objects.latest('id').remainingarticles
+                if checkrem == 0:
+                    break
+                i= i+1
+            os.system('python ../medcrawl/mcrawl/page_spider.py')
+            a = pgparam.objects.latest('id').relatedtags
+            al = a.split(',')
+            # al[0] = al[0][1:]
+            for i in range(0,len(al)):
+                al[i] = al[i][2:-1]
+                print(al[i])
+            al[len(al)-1] = al[len(al)-1][:-1]
+            st=paged.objects.all() # Collect all records from table
+            pgs = pgparam.objects.latest('id')
+            if(st):
+                enable = "enabled"
+                return render(request,'index.html',{'st':st, 'al':al,'enable':enable, 'pgs':pgs})
+            else:
+                noarts = "No Articles Found!"
+                return render(request,'index.html',{'st':st, 'al':al,'noarts':noarts})
+            # return render(request,'index.html',{'st':st, 'al':al})
+        else:
+            form = MyForm()
+    else:
+        form = MyForm()
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = NameForm2(request.POST)
+        # check whether it's valid:
+        nameof = request.POST.get('inputtagname')
+        if nameof:
+            print("TAG TO SEARCH :"+nameof)
+            tagg = nameof 
+            numm = 1
+            endat = numm*10 +1
+            startfrom = endat-10
+            tempval = None
+            if(pgparam.objects.all()):
+                tempval = pgparam.objects.latest('id').tag
+            if tempval:
+                print("PREVIOUS TAG FOUND!")
+            else:
+                tempval = ""
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
+            a.save()
+            i = 1  
+            while True:  
+                print("IN DO WHILE LOOP GOING "+str(i))
+                os.system('python ../medcrawl/mcrawl/medium_spider.py')
+                print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
+                if(pgparam.objects.latest('id').errcode == 945):
+                    spell = SpellChecker()
+                    words = spell.candidates(tagg)
+                    print(str(words))
+                    if not words:
+                        words = "something else"
+                    else:
+                        strt = ""
+                        for ele in words:
+                            if(ele == tagg):
+                                strt = "something else.  "
+                                break
+                            strt = strt+ele+", "
+                        strt = strt[:-2]
+                        words = strt
+                    msg = "Could Not Find Any Articles. Try "+str(words)
+                    return render(request,'index.html',{'msg':msg})
+                    break
+                checkrem = pgparam.objects.latest('id').remainingarticles
+                if checkrem == 0:
+                    break
+                i= i+1
+            os.system('python ../medcrawl/mcrawl/page_spider.py')
+            a = pgparam.objects.latest('id').relatedtags
+            al = a.split(',')
+            for i in range(0,len(al)):
+                al[i] = al[i][2:-1]
+                print(al[i])
+            al[len(al)-1] = al[len(al)-1][:-1]
+            st=paged.objects.all() # Collect all records from table
+            pgs = pgparam.objects.latest('id')
+            if(st):
+                enable = "enabled"
+                return render(request,'index.html',{'st':st, 'al':al,'enable':enable, 'pgs':pgs})
+            else:
+                noarts = "No Articles Found!"
+                return render(request,'index.html',{'al':al,'noarts':noarts})
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = NameForm2()
+    return render(request,'index.html')
+
     st=pagedata.objects.all() # Collect all records from table 
     return render(request,'index.html',{'st':st})
 def tagger(request):
+    if request.method == 'POST':
+        return index(request)
     if request.method=='GET':
         newtag = request.GET.get('sts.bgtag')
         if not newtag:
             pass
         else:
-            tagg = newtag
+            print("TAG TO SEARCH :"+newtag)
+            tagg = newtag 
             numm = 1
-            a = pgparam(tag = tagg, num = numm)
+            endat = numm*10 +1
+            startfrom = endat-10
+            tempval = None
+            if(pgparam.objects.all()):
+                tempval = pgparam.objects.latest('id').tag
+            if tempval:
+                print("PREVIOUS TAG FOUND!")
+            else:
+                tempval = ""
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
             a.save()
-            os.system('python ../medcrawl/mcrawl/medium_spider.py')
+            i = 1  
+            while True:  
+                print("IN DO WHILE LOOP GOING "+str(i))
+                os.system('python ../medcrawl/mcrawl/medium_spider.py')
+                print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
+                if(pgparam.objects.latest('id').errcode == 945):
+                    spell = SpellChecker()
+                    words = spell.candidates(tagg)
+                    print(str(words))
+                    if not words:
+                        words = "something else"
+                    else:
+                        strt = ""
+                        for ele in words:
+                            if(ele == tagg):
+                                strt = "something else.  "
+                                break
+                            strt = strt+ele+", "
+                        strt = strt[:-2]
+                        words = strt
+                    msg = "Could Not Find Any Articles. Try "+str(words)
+                    return render(request,'index.html',{'msg':msg})
+                    break
+                checkrem = pgparam.objects.latest('id').remainingarticles
+                if checkrem == 0:
+                    break
+                i= i+1
             os.system('python ../medcrawl/mcrawl/page_spider.py')
             a = pgparam.objects.latest('id').relatedtags
             al = a.split(',')
-            for i in range(0,9):
+            for i in range(0,len(al)):
                 al[i] = al[i][2:-1]
                 print(al[i])
-            al[8] = al[8][:-1]
+            al[len(al)-1] = al[len(al)-1][:-1]
             st=paged.objects.all() # Collect all records from table
-            return render(request,'index.html',{'st':st, 'al':al})
+            pgs = pgparam.objects.latest('id')
+            if(st):
+                enable = "enabled"
+                return render(request,'index.html',{'st':st, 'al':al,'enable':enable, 'pgs':pgs})
+            else:
+                noarts = "No Articles Found!"
+                return render(request,'index.html',{'al':al,'noarts':noarts})
             
-
