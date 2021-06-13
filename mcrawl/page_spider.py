@@ -59,40 +59,46 @@ class PageSpider(scrapy.Spider):
         con.close()
         c = paged.objects.filter(bglink = linkpat)
         if(c):
+            c = paged.objects.get(bglink = linkpat)
+        if(c):
             print("NO REDIRECTS")
+
         else:
             linkpat = response.request.meta['redirect_urls'][0]
             c = paged.objects.filter(bglink = linkpat)
+            if(c):
+                c = paged.objects.get(bglink = linkpat)
         pagetitle = response.xpath('//div/div/div/article/div/section/div/div/div/h1/text()').get()
         # athname = 
-        authorname = c.get().bgauthor
+        authorname = c.bgauthor
         authorname= authorname.replace(" ","")
         
-        filename = authorname+str(c.get().id)+".html"
-        path = "./static/"+authorname+str(c.get().id)+".html"
-        c.update(bgpage = path[1:])
+        filename = authorname+str(c.id)+".html"
+        path = "./static/"+authorname+str(c.id)+".html"
+        c.bgpage = path[1:]
         with open(path,'wb') as f:
             f.write(response.body)
         try:
-            c.update(bgtag1 = tags[0])
+            c.bgtag1 = tags[0]
         except:
             print("0 TAGS")
         try:
-            c.update(bgtag2 = tags[1])
+            c.bgtag2 = tags[1]
         except:
             print("1 TAGS")
         try:
-            c.update(bgtag3 = tags[2])
+            c.bgtag3 = tags[2]
         except:
             print("2 TAGS")
         try:
-            c.update(bgtag4 = tags[3])
+            c.bgtag4 = tags[3]
         except:
             print("2 TAGS")
         try:
-            c.update(bgtag1 = tags[4])
+            c.bgtag5 = tags[4]
         except:
             print("4 TAGS")
+        c.save()
         print("LinkPattern")
         print(linkpat)
         link = response.url

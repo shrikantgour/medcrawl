@@ -30,14 +30,17 @@ def index(request):
             startfrom = endat-10
             tempval = pgparam.objects.latest('id').tag
             if tempval:
-                print("PREVIOUS TAG FOUND!:"+tempval)
+                print("PREVIOUS TAG FOUND!: "+tempval)
             else:
                 tempval = ""
-            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945,loopcount = 0)
             a.save()
             i = 1  
             while True:  
                 print("IN DO WHILE LOOP GOING "+str(i))
+                pgvar = pgparam.objects.latest('id')
+                pgvar.loopcount = i
+                pgvar.save()
                 os.system('python ../medcrawl/mcrawl/medium_spider.py')
                 print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
                 if(pgparam.objects.latest('id').errcode == 945):
@@ -99,14 +102,17 @@ def index(request):
             if(pgparam.objects.all()):
                 tempval = pgparam.objects.latest('id').tag
             if tempval:
-                print("PREVIOUS TAG FOUND!")
+                print("PREVIOUS TAG FOUND!: "+tempval)
             else:
                 tempval = ""
-            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945,loopcount = 0)
             a.save()
             i = 1  
             while True:  
                 print("IN DO WHILE LOOP GOING "+str(i))
+                pgvar = pgparam.objects.latest('id')
+                pgvar.loopcount = i
+                pgvar.save()
                 os.system('python ../medcrawl/mcrawl/medium_spider.py')
                 print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
                 if(pgparam.objects.latest('id').errcode == 945):
@@ -168,6 +174,7 @@ def tagger(request):
         if not newtag:
             pass
         else:
+            print("TAG TO SEARCH :"+newtag)
             tagg = newtag 
             numm = 1
             endat = numm*10 +1
@@ -176,14 +183,17 @@ def tagger(request):
             if(pgparam.objects.all()):
                 tempval = pgparam.objects.latest('id').tag
             if tempval:
-                print("PREVIOUS TAG FOUND!")
+                print("PREVIOUS TAG FOUND!: "+tempval)
             else:
                 tempval = ""
-            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945)
+            a = pgparam(tag = tagg, num = numm,startnum = startfrom,endnum = endat,prevtag = tempval,subfromtoday = 1,remainingarticles = 0,errcode = 945,loopcount = 0)
             a.save()
             i = 1  
             while True:  
                 print("IN DO WHILE LOOP GOING "+str(i))
+                pgvar = pgparam.objects.latest('id')
+                pgvar.loopcount = i
+                pgvar.save()
                 os.system('python ../medcrawl/mcrawl/medium_spider.py')
                 print("ERRORCODE:"+ str(pgparam.objects.latest('id').errcode))
                 if(pgparam.objects.latest('id').errcode == 945):

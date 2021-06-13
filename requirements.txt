@@ -1,0 +1,4 @@
+Scrapy==2.5.0
+pyspellchecker==0.6.2
+Django==3.2.4
+spellchecker==0.4

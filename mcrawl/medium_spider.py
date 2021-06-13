@@ -14,6 +14,7 @@ from mcrawl.models import paged,pgparam
 con = sqlite3.connect('crawlt.db')
 cur = con.cursor()
 cur.execute('''DROP TABLE IF EXISTS pagedata''')
+print("DELETED SQLITE TABLE")
 con.commit()
 # Create table
 cur.execute('''CREATE TABLE pagedata (No int, title text,author text, readTime text, Day text, fullDate text,link text,fullpage text,tags text)''')
@@ -21,9 +22,12 @@ con.commit()
 con.close()
 previoustag = pgparam.objects.latest('id').prevtag
 currenttag = pgparam.objects.latest('id').tag
-if previoustag != currenttag:
+looper = pgparam.objects.latest('id').loopcount
+print("PREVIOUS TAG: "+previoustag+" CURRENTTAG: "+currenttag)
+if previoustag != currenttag and previoustag!="" and looper==1:
     paged.objects.all().delete()
-
+    print("DELETED Django PAGED")
+   
 class PostsSpider(scrapy.Spider):
     name = "posts"
     count = 0
@@ -40,6 +44,7 @@ class PostsSpider(scrapy.Spider):
         self.count = 1
         cur = con.cursor()
         nullcount = 0
+        dupcount = 0
         page = response.url.split('/')[-1]
         filename = 'posts-%s.html' % page
 
@@ -86,15 +91,25 @@ class PostsSpider(scrapy.Spider):
                 print("REMAINING ARTICLES: "+str(pg.remainingarticles)+" SUB FROM TODAY: "+str(pg.subfromtoday))
                 break
             nullcount=0
-            alreadyexist = paged.objects.filter(bgtitle = title)
+            alreadyexist = paged.objects.filter(bgtitle__icontains = title)
             if not alreadyexist:
+                print("ALREADYEXIST NULL")
                 if paged.objects.all():
-                    print(str(paged.objects.latest('id').bgtitle))
-                    if title == str(paged.objects.latest('id').bgtitle):
+                    print("PREVIOUSTITLE IN IF "+str(paged.objects.latest('id').bgtitle))
+                    if str(title) == str(paged.objects.latest('id').bgtitle):
                         print("FOUND BG Title"+ title)
                         alreadyexist = 1
+                        dupcount = dupcount+1
+                    else:
+                        dupcount = 0
             print("PRINTING ALRDYEXST:"+str(alreadyexist))
+            if paged.objects.all():
+                    print("PREVIOUS TITLE :"+str(paged.objects.latest('id').bgtitle))
             if alreadyexist:
+                dupcount = dupcount+1
+            else:
+                dupcount = 0
+            if (alreadyexist and dupcount >1) or len(alreadyexist)>1 :
                 print("DUPLICATE Title"+ title)
                 remaining = end-i
                 pg.remainingarticles = remaining
@@ -119,6 +134,7 @@ class PostsSpider(scrapy.Spider):
             
             substr = "?"
             link = link[:link.index(substr)]            
+            print("SAVING IN SQLITE")
             cur.execute("insert into pagedata(No,title,author,readTime,Day,fullDate,link) values (?, ?, ?, ?, ?, ?, ?)", (i, title,authorr,readtime,time,fulltime,link))
             pagenum = None
             if paged.objects.all():
@@ -126,10 +142,11 @@ class PostsSpider(scrapy.Spider):
                 pagenum = pagenum+1
             if not pagenum:
                 pagenum = i
+            print("SAVING IN DJANGO")
             b = paged(pgno = pagenum, bgtitle = title,bgauthor=authorr, bgread = readtime, bgdt = time, bgfdt = fulltime, bglink = link)
             b.save()
             
-            self.start_urls.append(link)
+            # self.start_urls.append(link)
             # print(self.start_urls)
 
             # scrapy.Request(link,callback = self.parse2)

@@ -29,3 +29,4 @@ class pgparam(models.Model):
     relatedtags = models.CharField(max_length=200,null=True)
     errcode = models.IntegerField(null=True)
     scrapetime = models.FloatField(null = True)
+    loopcount=models.IntegerField(null=True)
